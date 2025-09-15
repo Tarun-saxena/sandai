@@ -1,15 +1,44 @@
 import React from "react";
+import { Link, useLocation } from "react-router-dom";
 import "./Navbar.css";
 
 const Navbar = () => {
+  const location = useLocation();
+  
+  const isActive = (path) => location.pathname === path;
+  
   return (
     <nav className="navbar">
-      <div className="navbar-title"><img src="../public/logo.png" alt="Logo" className="logo" /></div>
+      <div className="navbar-title">
+        <Link to="/">
+          <img src="/logo.png" alt="Sand Analysis System" className="logo" />
+        </Link>
+      </div>
       <div className="navbar-links">
-        <button>Home</button>
-        <button>Report</button>
-        <button>Data</button>
-        <button>About</button>
+        <Link 
+          to="/" 
+          className={`nav-link ${isActive('/') ? 'active' : ''}`}
+        >
+          Home
+        </Link>
+        <Link 
+          to="/reports" 
+          className={`nav-link ${isActive('/reports') ? 'active' : ''}`}
+        >
+          Reports
+        </Link>
+        <Link 
+          to="/data" 
+          className={`nav-link ${isActive('/data') ? 'active' : ''}`}
+        >
+          Data
+        </Link>
+        <Link 
+          to="/about" 
+          className={`nav-link ${isActive('/about') ? 'active' : ''}`}
+        >
+          About
+        </Link>
       </div>
     </nav>
   );

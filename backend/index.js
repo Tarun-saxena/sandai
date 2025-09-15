@@ -5,6 +5,7 @@ const mongoose = require('mongoose');
 const multer = require('multer');
 const { parse } = require('csv-parse');
 require('dotenv').config();
+const uploadRoutes = require("./routes/upload");
 
 const app = express();
 const port = process.env.PORT || 5000;
@@ -35,6 +36,10 @@ app.use((err, req, res, next) => {
   console.error(err.stack);
   res.status(500).json({ error: 'Something went wrong!' });
 });
+
+
+app.use("/api", uploadRoutes);
+
 
 // Start server
 app.listen(port, () => {

@@ -24,7 +24,7 @@ const sandSampleSchema = new mongoose.Schema({
   },
   imageURL: {
     type: String,
-    required: true
+    required: false
   },
   createdAt: {
     type: Date,

@@ -30,8 +30,7 @@ router.post('/upload', upload.single('file'), async (req, res) => {
         latitude: parseFloat(data.latitude),
         longitude: parseFloat(data.longitude),
         diameter: parseFloat(data.diameter),
-        description: data.description,
-        imageURL: data.imageURL
+        description: data.description
       };
 
       // Basic validation

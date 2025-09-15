@@ -1,111 +1,236 @@
 import { useState, useEffect } from 'react';
-import { Box, Card, CardContent, Typography, Grid } from '@mui/material';
-import { BarChart, Bar, XAxis, YAxis, Tooltip, Legend, PieChart, Pie, Cell } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, Tooltip, Legend, PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
 import axios from 'axios';
+import './ReportsPage.css';
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d'];
 
 const ReportsPage = () => {
   const [stats, setStats] = useState(null);
   const [distribution, setDistribution] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [samples, setSamples] = useState([]);
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [statsResponse, distributionResponse] = await Promise.all([
-          axios.get('http://localhost:5000/api/sand-samples/stats/diameter'),
-          axios.get('http://localhost:5000/api/sand-samples/stats/diameter-distribution')
-        ]);
-        
-        setStats(statsResponse.data);
-        setDistribution(distributionResponse.data);
-      } catch (error) {
-        console.error('Error fetching reports data:', error);
-      }
-    };
-
     fetchData();
   }, []);
 
+  const fetchData = async () => {
+    try {
+      setLoading(true);
+      const [statsResponse, distributionResponse, samplesResponse] = await Promise.all([
+        axios.get('http://localhost:5000/api/sand-samples/stats/diameter'),
+        axios.get('http://localhost:5000/api/sand-samples/stats/diameter-distribution'),
+        axios.get('http://localhost:5000/api/sand-samples')
+      ]);
+      
+      setStats(statsResponse.data);
+      setDistribution(distributionResponse.data);
+      setSamples(samplesResponse.data);
+      setError(null);
+    } catch (error) {
+      console.error('Error fetching reports data:', error);
+      setError('Failed to fetch reports data. Please check if the server is running.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getLocationStats = () => {
+    if (samples.length === 0) return null;
+    
+    const latitudes = samples.map(s => s.latitude);
+    const longitudes = samples.map(s => s.longitude);
+    
+    return {
+      northernmost: Math.max(...latitudes).toFixed(4),
+      southernmost: Math.min(...latitudes).toFixed(4),
+      easternmost: Math.max(...longitudes).toFixed(4),
+      westernmost: Math.min(...longitudes).toFixed(4),
+    };
+  };
+
+  const getCategorizedStats = () => {
+    if (samples.length === 0) return [];
+    
+    const categories = {
+      'Fine (< 0.25mm)': samples.filter(s => s.diameter < 0.25).length,
+      'Medium (0.25-0.5mm)': samples.filter(s => s.diameter >= 0.25 && s.diameter < 0.5).length,
+      'Coarse (> 0.5mm)': samples.filter(s => s.diameter >= 0.5).length
+    };
+    
+    return Object.entries(categories).map(([name, value]) => ({ name, value }));
+  };
+
+  if (loading) {
+    return (
+      <div className="loading-container">
+        <div className="loading-spinner"></div>
+        <p>Loading analytics data...</p>
+      </div>
+    );
+  }
+
+  const locationStats = getLocationStats();
+  const categorizedStats = getCategorizedStats();
+
   return (
-    <Box sx={{ p: 3 }}>
-      <Typography variant="h4" gutterBottom>
-        Sand Sample Analysis Reports
-      </Typography>
+    <div className="reports-page">
+      <div className="reports-container">
+        <header className="reports-header">
+          <h1>Sand Sample Analysis Reports</h1>
+          <p className="reports-subtitle">Comprehensive analytics and statistical insights</p>
+        </header>
 
-      <Grid container spacing={3}>
-        {/* Statistics Card */}
-        <Grid item xs={12} md={6}>
-          <Card>
-            <CardContent>
-              <Typography variant="h6" gutterBottom>
-                Overall Statistics
-              </Typography>
-              {stats && (
-                <>
-                  <Typography>Total Samples: {stats.totalSamples}</Typography>
-                  <Typography>Average Diameter: {stats.avgDiameter.toFixed(2)}mm</Typography>
-                  <Typography>Min Diameter: {stats.minDiameter.toFixed(2)}mm</Typography>
-                  <Typography>Max Diameter: {stats.maxDiameter.toFixed(2)}mm</Typography>
-                </>
-              )}
-            </CardContent>
-          </Card>
-        </Grid>
+        {error && (
+          <div className="error-message">
+            {error}
+            <button onClick={fetchData} className="retry-btn">Retry</button>
+          </div>
+        )}
 
-        {/* Distribution Bar Chart */}
-        <Grid item xs={12}>
-          <Card>
-            <CardContent>
-              <Typography variant="h6" gutterBottom>
-                Diameter Distribution
-              </Typography>
-              <BarChart
-                width={800}
-                height={400}
-                data={distribution}
-                margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
-              >
-                <XAxis dataKey="_id" />
-                <YAxis />
-                <Tooltip />
-                <Legend />
-                <Bar dataKey="count" fill="#8884d8" />
-              </BarChart>
-            </CardContent>
-          </Card>
-        </Grid>
+        <div className="reports-grid">
+          {/* Statistics Cards */}
+          <div className="stats-section">
+            <div className="card">
+              <div className="card-header">
+                <h3>Overall Statistics</h3>
+              </div>
+              <div className="card-content">
+                {stats ? (
+                  <div className="stats-list">
+                    <div className="stat-item">
+                      <span className="stat-label">Total Samples:</span>
+                      <span className="stat-value">{stats.totalSamples}</span>
+                    </div>
+                    <div className="stat-item">
+                      <span className="stat-label">Average Diameter:</span>
+                      <span className="stat-value">{stats.avgDiameter.toFixed(3)}mm</span>
+                    </div>
+                    <div className="stat-item">
+                      <span className="stat-label">Min Diameter:</span>
+                      <span className="stat-value">{stats.minDiameter.toFixed(3)}mm</span>
+                    </div>
+                    <div className="stat-item">
+                      <span className="stat-label">Max Diameter:</span>
+                      <span className="stat-value">{stats.maxDiameter.toFixed(3)}mm</span>
+                    </div>
+                  </div>
+                ) : (
+                  <p>No statistics available</p>
+                )}
+              </div>
+            </div>
 
-        {/* Distribution Pie Chart */}
-        <Grid item xs={12} md={6}>
-          <Card>
-            <CardContent>
-              <Typography variant="h6" gutterBottom>
-                Size Distribution (Pie Chart)
-              </Typography>
-              <PieChart width={400} height={400}>
-                <Pie
-                  data={distribution}
-                  dataKey="count"
-                  nameKey="_id"
-                  cx="50%"
-                  cy="50%"
-                  outerRadius={150}
-                  fill="#8884d8"
-                  label
-                >
-                  {distribution.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+            {locationStats && (
+              <div className="card">
+                <div className="card-header">
+                  <h3>Geographic Coverage</h3>
+                </div>
+                <div className="card-content">
+                  <div className="stats-list">
+                    <div className="stat-item">
+                      <span className="stat-label">Northernmost:</span>
+                      <span className="stat-value">{locationStats.northernmost}°</span>
+                    </div>
+                    <div className="stat-item">
+                      <span className="stat-label">Southernmost:</span>
+                      <span className="stat-value">{locationStats.southernmost}°</span>
+                    </div>
+                    <div className="stat-item">
+                      <span className="stat-label">Easternmost:</span>
+                      <span className="stat-value">{locationStats.easternmost}°</span>
+                    </div>
+                    <div className="stat-item">
+                      <span className="stat-label">Westernmost:</span>
+                      <span className="stat-value">{locationStats.westernmost}°</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Distribution Bar Chart */}
+          <div className="chart-section full-width">
+            <div className="card">
+              <div className="card-header">
+                <h3>Diameter Distribution</h3>
+              </div>
+              <div className="card-content">
+                <div className="chart-container">
+                  <ResponsiveContainer width="100%" height={400}>
+                    <BarChart data={distribution} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+                      <XAxis dataKey="_id" />
+                      <YAxis />
+                      <Tooltip />
+                      <Legend />
+                      <Bar dataKey="count" fill="#007bff" radius={[4, 4, 0, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Distribution Pie Chart */}
+          <div className="chart-section">
+            <div className="card">
+              <div className="card-header">
+                <h3>Size Distribution</h3>
+              </div>
+              <div className="card-content">
+                <div className="chart-container">
+                  <ResponsiveContainer width="100%" height={400}>
+                    <PieChart>
+                      <Pie
+                        data={categorizedStats}
+                        dataKey="value"
+                        nameKey="name"
+                        cx="50%"
+                        cy="50%"
+                        outerRadius={120}
+                        fill="#8884d8"
+                        label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                      >
+                        {categorizedStats.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                        ))}
+                      </Pie>
+                      <Tooltip />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Summary Cards */}
+          <div className="summary-section">
+            <div className="card">
+              <div className="card-header">
+                <h3>Category Breakdown</h3>
+              </div>
+              <div className="card-content">
+                <div className="category-breakdown">
+                  {categorizedStats.map((category, index) => (
+                    <div key={category.name} className="category-item">
+                      <div 
+                        className="category-color" 
+                        style={{ backgroundColor: COLORS[index % COLORS.length] }}
+                      ></div>
+                      <span className="category-name">{category.name}</span>
+                      <span className="category-count">{category.value} samples</span>
+                    </div>
                   ))}
-                </Pie>
-                <Tooltip />
-                <Legend />
-              </PieChart>
-            </CardContent>
-          </Card>
-        </Grid>
-      </Grid>
-    </Box>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 };
 
