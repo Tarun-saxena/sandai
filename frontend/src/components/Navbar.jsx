@@ -10,9 +10,7 @@ const Navbar = () => {
   return (
     <nav className="navbar">
       <div className="navbar-title">
-        <Link to="/">
-          <img src="/logo.png" alt="Sand Analysis System" className="logo" />
-        </Link>
+        Retra.AI
       </div>
       <div className="navbar-links">
         <Link 
