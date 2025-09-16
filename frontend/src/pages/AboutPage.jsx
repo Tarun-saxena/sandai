@@ -25,19 +25,19 @@ const AboutPage = () => {
             <h2>Key Features</h2>
             <div className="features-grid">
               <div className="feature-card">
-                <h3>🗺️ Interactive Mapping</h3>
+                <h3> Interactive Mapping</h3>
                 <p>Visualize sand sample locations on an interactive map with detailed popup information and filtering capabilities.</p>
               </div>
               <div className="feature-card">
-                <h3>📊 Statistical Analysis</h3>
+                <h3> Statistical Analysis</h3>
                 <p>Comprehensive statistical analysis of sand particle diameters including distribution charts and aggregated metrics.</p>
               </div>
               <div className="feature-card">
-                <h3>📁 Data Management</h3>
+                <h3> Data Management</h3>
                 <p>Efficient data management system with search, filter, and export functionalities for research datasets.</p>
               </div>
               <div className="feature-card">
-                <h3>📈 Detailed Reports</h3>
+                <h3> Detailed Reports</h3>
                 <p>Generate detailed analytical reports with visualizations for diameter distribution and geographical trends.</p>
               </div>
             </div>

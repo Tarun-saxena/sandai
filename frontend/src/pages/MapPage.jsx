@@ -21,7 +21,7 @@ const MapPage = () => {
     const fetchSamples = async () => {
       try {
         setLoading(true);
-        const response = await axios.get("http://localhost:5000/api/sand-samples");
+        const response = await axios.get("https://sandai.onrender.com/api/sand-samples");
         setSamples(response.data);
         setError(null);
       } catch (error) {

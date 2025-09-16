@@ -20,9 +20,9 @@ const ReportsPage = () => {
     try {
       setLoading(true);
       const [statsResponse, distributionResponse, samplesResponse] = await Promise.all([
-        axios.get('http://localhost:5000/api/sand-samples/stats/diameter'),
-        axios.get('http://localhost:5000/api/sand-samples/stats/diameter-distribution'),
-        axios.get('http://localhost:5000/api/sand-samples')
+        axios.get('https://sandai.onrender.com/api/sand-samples/stats/diameter'),
+        axios.get('https://sandai.onrender.com/api/sand-samples/stats/diameter-distribution'),
+        axios.get('https://sandai.onrender.com/api/sand-samples')
       ]);
       
       setStats(statsResponse.data);
