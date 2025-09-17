@@ -111,7 +111,7 @@ const MapPage = () => {
             key={sample._id}
             center={[sample.latitude, sample.longitude]}
             radius={8}
-            fillColor="#ff7800"
+            fillColor="#169618ff"
             color="#000"
             weight={1}
             opacity={1}
