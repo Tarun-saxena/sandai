@@ -23,8 +23,9 @@ router.post("/upload-csv", upload.single("file"), async (req, res) => {
 
         // Delete temp file
         fs.unlinkSync(req.file.path);
-
-        res.json({ message: "CSV uploaded successfully", count: results.length });
+          
+        res.status(200).json({ message: "CSV uploaded successfully", count: results.length });
+        
       });
   } catch (error) {
     console.error(error);
