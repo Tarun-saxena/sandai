@@ -275,6 +275,10 @@
     overflow-y: auto;
     padding: 20px;
   }
+
+   .sidebar h2 {
+    display: none;
+  }
   
   .sidebar::before {
     display: none;
@@ -331,9 +335,8 @@
     padding: 15px;
   }
   
-  .sidebar h2 {
-    font-size: 1.2rem;
-    margin-bottom: 16px;
+   .sidebar h2 {
+    display: none;
   }
   
   .filter-group {
