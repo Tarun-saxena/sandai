@@ -15,9 +15,11 @@ const DataPage = () => {
 
   const categories = [
     { label: 'All', value: 'All' },
-    { label: 'Fine (< 0.25mm)', value: 'Fine', min: 0, max: 0.25 },
-    { label: 'Medium (0.25-0.5mm)', value: 'Medium', min: 0.25, max: 0.5 },
-    { label: 'Coarse (> 0.5mm)', value: 'Coarse', min: 0.5, max: Infinity },
+    { label: 'Silt/Clay', value: 'Silt/Clay' },
+    { label: 'Fine Sand', value: 'Fine Sand' },
+    { label: 'Medium Sand', value: 'Medium Sand' },
+    { label: 'Very Coarse Sand', value: 'Very Coarse Sand' },
+    { label: 'Gravel', value: 'Gravel' },
   ];
 
   useEffect(() => {
@@ -48,21 +50,19 @@ const DataPage = () => {
     // Apply search filter
     if (searchTerm) {
       filtered = filtered.filter(sample => 
-        sample.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        sample.sedimentType.toLowerCase().includes(searchTerm.toLowerCase()) ||
         sample.latitude.toString().includes(searchTerm) ||
         sample.longitude.toString().includes(searchTerm) ||
-        sample.diameter.toString().includes(searchTerm)
+        sample.d50.toString().includes(searchTerm) ||
+        sample.dmean.toString().includes(searchTerm)
       );
     }
 
     // Apply category filter
     if (selectedCategory !== 'All') {
-      const category = categories.find(cat => cat.value === selectedCategory);
-      if (category) {
-        filtered = filtered.filter(sample => 
-          sample.diameter >= category.min && sample.diameter < category.max
-        );
-      }
+      filtered = filtered.filter(sample => 
+        sample.sedimentType === selectedCategory
+      );
     }
 
     // Apply sorting
@@ -101,12 +101,22 @@ const DataPage = () => {
 
   const handleExport = () => {
     const csvContent = [
-      ['Latitude', 'Longitude', 'Diameter (mm)', 'Description', 'Created At'].join(','),
+      ['LAT', 'LON', 'Number_of_Grains', 'D10', 'D16', 'D25', 'D50', 'D65', 'D75', 'D84', 'D90', 'Dmean', 'Dmed', 'Sediment_Type', 'Created At'].join(','),
       ...filteredSamples.map(sample => [
         sample.latitude,
         sample.longitude,
-        sample.diameter,
-        `"${sample.description}"`,
+        sample.numberOfGrains,
+        sample.d10,
+        sample.d16,
+        sample.d25,
+        sample.d50,
+        sample.d65,
+        sample.d75,
+        sample.d84,
+        sample.d90,
+        sample.dmean,
+        sample.dmed,
+        sample.sedimentType,
         new Date(sample.createdAt).toLocaleDateString()
       ].join(','))
     ].join('\n');
@@ -165,7 +175,7 @@ const DataPage = () => {
           <div className="search-section">
             <input
               type="text"
-              placeholder="Search samples (description, coordinates, diameter)..."
+              placeholder="Search samples (sediment type, coordinates, D50, Dmean)..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="search-input"
@@ -173,7 +183,7 @@ const DataPage = () => {
           </div>
 
           <div className="filter-section">
-            <label htmlFor="category-select">Filter by size:</label>
+            <label htmlFor="category-select">Filter by sediment type:</label>
             <select
               id="category-select"
               value={selectedCategory}
@@ -223,10 +233,18 @@ const DataPage = () => {
                 <th onClick={() => handleSort('longitude')} className="sortable">
                   Longitude{getSortIcon('longitude')}
                 </th>
-                <th onClick={() => handleSort('diameter')} className="sortable">
-                  Diameter (mm){getSortIcon('diameter')}
+                <th onClick={() => handleSort('numberOfGrains')} className="sortable">
+                  Grain Count{getSortIcon('numberOfGrains')}
                 </th>
-                <th>Description</th>
+                <th onClick={() => handleSort('d50')} className="sortable">
+                  D50 (mm){getSortIcon('d50')}
+                </th>
+                <th onClick={() => handleSort('dmean')} className="sortable">
+                  Mean (mm){getSortIcon('dmean')}
+                </th>
+                <th onClick={() => handleSort('sedimentType')} className="sortable">
+                  Sediment Type{getSortIcon('sedimentType')}
+                </th>
                 <th onClick={() => handleSort('createdAt')} className="sortable">
                   Date Added{getSortIcon('createdAt')}
                 </th>
@@ -237,15 +255,21 @@ const DataPage = () => {
                 <tr key={sample._id} className="data-row">
                   <td>{sample.latitude.toFixed(6)}</td>
                   <td>{sample.longitude.toFixed(6)}</td>
+                  <td>{sample.numberOfGrains}</td>
                   <td>
                     <span className={`diameter-badge ${
-                      sample.diameter < 0.25 ? 'fine' :
-                      sample.diameter < 0.5 ? 'medium' : 'coarse'
+                      sample.d50 < 0.25 ? 'fine' :
+                      sample.d50 < 0.5 ? 'medium' : 'coarse'
                     }`}>
-                      {sample.diameter}
+                      {sample.d50.toFixed(3)}
                     </span>
                   </td>
-                  <td className="description-cell">{sample.description}</td>
+                  <td>{sample.dmean.toFixed(3)}</td>
+                  <td>
+                    <span className={`sediment-badge ${sample.sedimentType.replace(/[\s\/]/g, '-').toLowerCase()}`}>
+                      {sample.sedimentType}
+                    </span>
+                  </td>
                   <td>{new Date(sample.createdAt).toLocaleDateString()}</td>
                 </tr>
               ))}

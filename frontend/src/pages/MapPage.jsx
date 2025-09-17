@@ -12,9 +12,11 @@ const MapPage = () => {
 
   const categories = [
     { label: "All", value: "All" },
-    { label: "Fine (< 0.25mm)", value: "Fine" },
-    { label: "Medium (0.25-0.5mm)", value: "Medium" },
-    { label: "Coarse (> 0.5mm)", value: "Coarse" },
+    { label: "Silt/Clay", value: "Silt/Clay" },
+    { label: "Fine Sand", value: "Fine Sand" },
+    { label: "Medium Sand", value: "Medium Sand" },
+    { label: "Very Coarse Sand", value: "Very Coarse Sand" },
+    { label: "Gravel", value: "Gravel" },
   ];
 
   useEffect(() => {
@@ -35,18 +37,11 @@ const MapPage = () => {
     fetchSamples();
   }, []);
 
-  // Filter logic with proper diameter categorization
-  const getCategoryFromDiameter = (diameter) => {
-    if (diameter < 0.25) return "Fine";
-    if (diameter >= 0.25 && diameter < 0.5) return "Medium";
-    if (diameter >= 0.5) return "Coarse";
-    return "All";
-  };
-
+  // Filter logic based on sediment type
   const filteredSamples =
     grainCategory === "All"
       ? samples
-      : samples.filter((sample) => getCategoryFromDiameter(sample.diameter) === grainCategory);
+      : samples.filter((sample) => sample.sedimentType === grainCategory);
 
   if (loading) {
     return (
@@ -69,9 +64,9 @@ const MapPage = () => {
           </div>
         )}
 
-        {/* Grain Size Category */}
+        {/* Sediment Type Category */}
         <div className="filter-group">
-          <p className="filter-label">Grain Size Category</p>
+          <p className="filter-label">Sediment Type</p>
           <div className="filter-buttons">
             {categories.map((cat) => (
               <button
@@ -119,11 +114,13 @@ const MapPage = () => {
           >
             <Popup>
               <div className="popup-card">
-                <h3>Sand Sample Details</h3>
+                <h3>Grain Size Sample Details</h3>
                 <p><strong>Location:</strong> {sample.latitude.toFixed(4)}°, {sample.longitude.toFixed(4)}°</p>
-                <p><strong>Diameter:</strong> {sample.diameter}mm</p>
-                <p><strong>Category:</strong> {getCategoryFromDiameter(sample.diameter)}</p>
-                <p><strong>Description:</strong> {sample.description}</p>
+                <p><strong>Grain Count:</strong> {sample.numberOfGrains}</p>
+                <p><strong>D50:</strong> {sample.d50.toFixed(3)}mm</p>
+                <p><strong>Mean Size:</strong> {sample.dmean.toFixed(3)}mm</p>
+                <p><strong>Median Size:</strong> {sample.dmed.toFixed(3)}mm</p>
+                <p><strong>Sediment Type:</strong> {sample.sedimentType}</p>
               </div>
             </Popup>
           </CircleMarker>

@@ -20,8 +20,8 @@ const ReportsPage = () => {
     try {
       setLoading(true);
       const [statsResponse, distributionResponse, samplesResponse] = await Promise.all([
-        axios.get('https://sandai.onrender.com/api/sand-samples/stats/diameter'),
-        axios.get('https://sandai.onrender.com/api/sand-samples/stats/diameter-distribution'),
+        axios.get('https://sandai.onrender.com/api/sand-samples/stats/grain-size'),
+        axios.get('https://sandai.onrender.com/api/sand-samples/stats/sediment-distribution'),
         axios.get('https://sandai.onrender.com/api/sand-samples')
       ]);
       
@@ -54,11 +54,11 @@ const ReportsPage = () => {
   const getCategorizedStats = () => {
     if (samples.length === 0) return [];
     
-    const categories = {
-      'Fine (< 0.25mm)': samples.filter(s => s.diameter < 0.25).length,
-      'Medium (0.25-0.5mm)': samples.filter(s => s.diameter >= 0.25 && s.diameter < 0.5).length,
-      'Coarse (> 0.5mm)': samples.filter(s => s.diameter >= 0.5).length
-    };
+    const categories = {};
+    samples.forEach(sample => {
+      const type = sample.sedimentType;
+      categories[type] = (categories[type] || 0) + 1;
+    });
     
     return Object.entries(categories).map(([name, value]) => ({ name, value }));
   };
@@ -105,16 +105,24 @@ const ReportsPage = () => {
                       <span className="stat-value">{stats.totalSamples}</span>
                     </div>
                     <div className="stat-item">
-                      <span className="stat-label">Average Diameter:</span>
-                      <span className="stat-value">{stats.avgDiameter.toFixed(3)}mm</span>
+                      <span className="stat-label">Average D50:</span>
+                      <span className="stat-value">{stats.avgD50.toFixed(3)}mm</span>
                     </div>
                     <div className="stat-item">
-                      <span className="stat-label">Min Diameter:</span>
-                      <span className="stat-value">{stats.minDiameter.toFixed(3)}mm</span>
+                      <span className="stat-label">Min D50:</span>
+                      <span className="stat-value">{stats.minD50.toFixed(3)}mm</span>
                     </div>
                     <div className="stat-item">
-                      <span className="stat-label">Max Diameter:</span>
-                      <span className="stat-value">{stats.maxDiameter.toFixed(3)}mm</span>
+                      <span className="stat-label">Max D50:</span>
+                      <span className="stat-value">{stats.maxD50.toFixed(3)}mm</span>
+                    </div>
+                    <div className="stat-item">
+                      <span className="stat-label">Average Mean Size:</span>
+                      <span className="stat-value">{stats.avgDmean.toFixed(3)}mm</span>
+                    </div>
+                    <div className="stat-item">
+                      <span className="stat-label">Average Grain Count:</span>
+                      <span className="stat-value">{Math.round(stats.avgNumberOfGrains)}</span>
                     </div>
                   </div>
                 ) : (
@@ -156,7 +164,7 @@ const ReportsPage = () => {
           <div className="chart-section full-width">
             <div className="card">
               <div className="card-header">
-                <h3>Diameter Distribution</h3>
+                <h3>Sediment Type Distribution</h3>
               </div>
               <div className="card-content">
                 <div className="chart-container">
@@ -178,7 +186,7 @@ const ReportsPage = () => {
           <div className="chart-section">
             <div className="card">
               <div className="card-header">
-                <h3>Size Distribution</h3>
+                <h3>Sediment Type Breakdown</h3>
               </div>
               <div className="card-content">
                 <div className="chart-container">
@@ -210,7 +218,7 @@ const ReportsPage = () => {
           <div className="summary-section">
             <div className="card">
               <div className="card-header">
-                <h3>Category Breakdown</h3>
+                <h3>Sediment Type Summary</h3>
               </div>
               <div className="card-content">
                 <div className="category-breakdown">

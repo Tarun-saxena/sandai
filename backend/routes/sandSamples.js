@@ -6,6 +6,21 @@ const SandSample = require('../models/SandSample');
 
 const router = express.Router();
 
+// Helper function to categorize sediment based on Dmed
+const categorizeSediment = (dmed) => {
+  if (dmed < 0.063) {
+    return "Silt/Clay";
+  } else if (dmed < 0.2) {
+    return "Fine Sand";
+  } else if (dmed < 0.63) {
+    return "Medium Sand";
+  } else if (dmed < 2.0) {
+    return "Very Coarse Sand";
+  } else {
+    return "Gravel";
+  }
+};
+
 // Configure multer for file upload
 const upload = multer({ dest: 'uploads/' });
 
@@ -25,16 +40,28 @@ router.post('/upload', upload.single('file'), async (req, res) => {
   fs.createReadStream(req.file.path)
     .pipe(parse({ columns: true, trim: true }))
     .on('data', (data) => {
-      // Validate and transform data
+      // Validate and transform data according to new CSV structure
       const sample = {
-        latitude: parseFloat(data.latitude),
-        longitude: parseFloat(data.longitude),
-        diameter: parseFloat(data.diameter),
-        description: data.description
+        latitude: parseFloat(data.LAT),
+        longitude: parseFloat(data.LON),
+        numberOfGrains: parseInt(data.Number_of_Grains),
+        d10: parseFloat(data.D10),
+        d16: parseFloat(data.D16),
+        d25: parseFloat(data.D25),
+        d50: parseFloat(data.D50),
+        d65: parseFloat(data.D65),
+        d75: parseFloat(data.D75),
+        d84: parseFloat(data.D84),
+        d90: parseFloat(data.D90),
+        dmean: parseFloat(data.Dmean),
+        dmed: parseFloat(data.Dmed),
+        sedimentType: categorizeSediment(parseFloat(data.Dmed))
       };
 
-      // Basic validation
-      if (isNaN(sample.latitude) || isNaN(sample.longitude) || isNaN(sample.diameter)) {
+      // Basic validation for required fields
+      if (isNaN(sample.latitude) || isNaN(sample.longitude) || 
+          isNaN(sample.numberOfGrains) || isNaN(sample.d50) || 
+          isNaN(sample.dmean) || isNaN(sample.dmed)) {
         return;
       }
 
@@ -102,16 +129,20 @@ router.get('/bounds', async (req, res) => {
   }
 });
 
-// Get diameter statistics
-router.get('/stats/diameter', async (req, res) => {
+// Get grain size statistics
+router.get('/stats/grain-size', async (req, res) => {
   try {
     const stats = await SandSample.aggregate([
       {
         $group: {
           _id: null,
-          avgDiameter: { $avg: '$diameter' },
-          minDiameter: { $min: '$diameter' },
-          maxDiameter: { $max: '$diameter' },
+          avgD50: { $avg: '$d50' },
+          minD50: { $min: '$d50' },
+          maxD50: { $max: '$d50' },
+          avgDmean: { $avg: '$dmean' },
+          minDmean: { $min: '$dmean' },
+          maxDmean: { $max: '$dmean' },
+          avgNumberOfGrains: { $avg: '$numberOfGrains' },
           totalSamples: { $sum: 1 }
         }
       }
@@ -119,12 +150,31 @@ router.get('/stats/diameter', async (req, res) => {
     
     res.json(stats[0] || { error: 'No data available' });
   } catch (error) {
-    res.status(500).json({ error: 'Error calculating diameter statistics' });
+    res.status(500).json({ error: 'Error calculating grain size statistics' });
   }
 });
 
-// Get samples grouped by diameter ranges
-router.get('/stats/diameter-distribution', async (req, res) => {
+// Get samples grouped by sediment types
+router.get('/stats/sediment-distribution', async (req, res) => {
+  try {
+    const distribution = await SandSample.aggregate([
+      {
+        $group: {
+          _id: '$sedimentType',
+          count: { $sum: 1 }
+        }
+      },
+      { $sort: { 'count': -1 } }
+    ]);
+    
+    res.json(distribution);
+  } catch (error) {
+    res.status(500).json({ error: 'Error calculating sediment distribution' });
+  }
+});
+
+// Get samples grouped by D50 ranges
+router.get('/stats/d50-distribution', async (req, res) => {
   try {
     const distribution = await SandSample.aggregate([
       {
@@ -132,11 +182,11 @@ router.get('/stats/diameter-distribution', async (req, res) => {
           _id: {
             $switch: {
               branches: [
-                { case: { $lt: ['$diameter', 0.1] }, then: '< 0.1mm' },
-                { case: { $lt: ['$diameter', 0.25] }, then: '0.1-0.25mm' },
-                { case: { $lt: ['$diameter', 0.5] }, then: '0.25-0.5mm' },
-                { case: { $lt: ['$diameter', 1] }, then: '0.5-1mm' },
-                { case: { $lt: ['$diameter', 2] }, then: '1-2mm' }
+                { case: { $lt: ['$d50', 0.1] }, then: '< 0.1mm' },
+                { case: { $lt: ['$d50', 0.25] }, then: '0.1-0.25mm' },
+                { case: { $lt: ['$d50', 0.5] }, then: '0.25-0.5mm' },
+                { case: { $lt: ['$d50', 1] }, then: '0.5-1mm' },
+                { case: { $lt: ['$d50', 2] }, then: '1-2mm' }
               ],
               default: '> 2mm'
             }
@@ -149,7 +199,7 @@ router.get('/stats/diameter-distribution', async (req, res) => {
     
     res.json(distribution);
   } catch (error) {
-    res.status(500).json({ error: 'Error calculating diameter distribution' });
+    res.status(500).json({ error: 'Error calculating D50 distribution' });
   }
 });
 

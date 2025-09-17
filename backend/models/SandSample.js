@@ -13,18 +13,69 @@ const sandSampleSchema = new mongoose.Schema({
     min: -180,
     max: 180
   },
-  diameter: {
+  // Grain size analysis data
+  numberOfGrains: {
     type: Number,
     required: true,
     min: 0
   },
-  description: {
-    type: String,
-    required: true
+  // Grain size percentiles
+  d10: {
+    type: Number,
+    required: true,
+    min: 0
   },
-  imageURL: {
+  d16: {
+    type: Number,
+    required: true,
+    min: 0
+  },
+  d25: {
+    type: Number,
+    required: true,
+    min: 0
+  },
+  d50: {
+    type: Number,
+    required: true,
+    min: 0
+  },
+  d65: {
+    type: Number,
+    required: true,
+    min: 0
+  },
+  d75: {
+    type: Number,
+    required: true,
+    min: 0
+  },
+  d84: {
+    type: Number,
+    required: true,
+    min: 0
+  },
+  d90: {
+    type: Number,
+    required: true,
+    min: 0
+  },
+  // Statistical measures
+  dmean: {
+    type: Number,
+    required: true,
+    min: 0
+  },
+  dmed: {
+    type: Number,
+    required: true,
+    min: 0
+  },
+  // Sediment classification based on Dmed
+  sedimentType: {
     type: String,
-    required: false
+    required: true,
+    enum: ['Silt/Clay', 'Fine Sand', 'Medium Sand', 'Very Coarse Sand', 'Gravel']
   },
   createdAt: {
     type: Date,
