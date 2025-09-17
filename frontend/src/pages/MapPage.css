@@ -251,8 +251,8 @@
   }
   
   .filter-group {
-    padding: 18px;
-    margin-bottom: 24px;
+    padding: 2px;
+    margin-bottom:0px;
   }
   
   .sidebar h2 {
@@ -306,8 +306,10 @@
   }
   
   .sample-info {
-    margin-top: 25px;
-    padding: 20px;
+   display: none;
+  }
+  .sample-count{
+    display: none;
   }
   
   .data-records {
@@ -335,8 +337,8 @@
   }
   
   .filter-group {
-    padding: 15px;
-    margin-bottom: 20px;
+    
+    margin-bottom: 0px;
   }
   
   .filter-label {
@@ -350,12 +352,11 @@
   }
   
   .sample-info {
-    padding: 16px;
-    margin-top: 20px;
+    display: none;
   }
   
   .sample-count {
-    font-size: 0.95rem;
+   display: none;
   }
   
   .filter-info {
