@@ -76,7 +76,17 @@ router.post('/upload', upload.single('file'), async (req, res) => {
           const existing = await SandSample.findOne({
             latitude: sample.latitude,
             longitude: sample.longitude,
-            d50: sample.d50
+            numberOfGrains: sample.numberOfGrains,
+            d10: sample.d10,
+            d16: sample.d16,
+            d25: sample.d25,
+            d50: sample.d50,
+            d65: sample.d65,
+            d75: sample.d75,
+            d84: sample.d84,
+            d90: sample.d90,
+            dmean: sample.dmean,
+            dmed: sample.dmed
           });
           
           if (!existing) {
@@ -218,6 +228,55 @@ router.get('/stats/d50-distribution', async (req, res) => {
     res.json(distribution);
   } catch (error) {
     res.status(500).json({ error: 'Error calculating D50 distribution' });
+  }
+});
+
+// Get historical records for a specific location (temporal analysis)
+router.get('/location-history', async (req, res) => {
+  const { lat, lon, radius } = req.query;
+  
+  if (!lat || !lon) {
+    return res.status(400).json({ error: 'Latitude and longitude are required' });
+  }
+  
+  const latitude = parseFloat(lat);
+  const longitude = parseFloat(lon);
+  const searchRadius = parseFloat(radius) || 0.001; // Default 0.001 degrees (~100m)
+  
+  try {
+    const historicalSamples = await SandSample.find({
+      latitude: {
+        $gte: latitude - searchRadius,
+        $lte: latitude + searchRadius
+      },
+      longitude: {
+        $gte: longitude - searchRadius,
+        $lte: longitude + searchRadius
+      }
+    }).sort({ createdAt: 1 }); // Sort by date (oldest first)
+    
+    // Calculate changes over time
+    const analysis = {
+      totalSamples: historicalSamples.length,
+      timeSpan: historicalSamples.length > 1 ? {
+        earliest: historicalSamples[0].createdAt,
+        latest: historicalSamples[historicalSamples.length - 1].createdAt
+      } : null,
+      samples: historicalSamples,
+      trends: historicalSamples.length > 1 ? {
+        d50Change: historicalSamples[historicalSamples.length - 1].d50 - historicalSamples[0].d50,
+        dmeanChange: historicalSamples[historicalSamples.length - 1].dmean - historicalSamples[0].dmean,
+        sedimentTypeEvolution: historicalSamples.map(s => ({
+          date: s.createdAt,
+          type: s.sedimentType,
+          d50: s.d50
+        }))
+      } : null
+    };
+    
+    res.json(analysis);
+  } catch (error) {
+    res.status(500).json({ error: 'Error fetching location history' });
   }
 });
 

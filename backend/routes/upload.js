@@ -62,7 +62,17 @@ router.post("/upload-csv", upload.single("file"), async (req, res) => {
           const existing = await SandSample.findOne({
             latitude: sample.latitude,
             longitude: sample.longitude,
-            d50: sample.d50
+            numberOfGrains: sample.numberOfGrains,
+            d10: sample.d10,
+            d16: sample.d16,
+            d25: sample.d25,
+            d50: sample.d50,
+            d65: sample.d65,
+            d75: sample.d75,
+            d84: sample.d84,
+            d90: sample.d90,
+            dmean: sample.dmean,
+            dmed: sample.dmed
           });
           
           if (!existing) {

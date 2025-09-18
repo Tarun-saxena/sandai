@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { MapContainer, TileLayer, CircleMarker, Popup } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import axios from "axios";
+import LocationHistory from "../components/LocationHistory";
 import "./MapPage.css";
 
 const MapPage = () => {
@@ -9,6 +10,8 @@ const MapPage = () => {
   const [grainCategory, setGrainCategory] = useState("All");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [showHistory, setShowHistory] = useState(false);
+  const [selectedLocation, setSelectedLocation] = useState(null);
 
   const categories = [
     { label: "All", value: "All" },
@@ -42,6 +45,16 @@ const MapPage = () => {
     grainCategory === "All"
       ? samples
       : samples.filter((sample) => sample.sedimentType === grainCategory);
+
+  const handleViewHistory = (latitude, longitude) => {
+    setSelectedLocation({ latitude, longitude });
+    setShowHistory(true);
+  };
+
+  const closeHistory = () => {
+    setShowHistory(false);
+    setSelectedLocation(null);
+  };
 
   if (loading) {
     return (
@@ -121,11 +134,26 @@ const MapPage = () => {
                 <p><strong>Mean Size:</strong> {sample.dmean.toFixed(3)}mm</p>
                 <p><strong>Median Size:</strong> {sample.dmed.toFixed(3)}mm</p>
                 <p><strong>Sediment Type:</strong> {sample.sedimentType}</p>
+                <p><strong>Date:</strong> {new Date(sample.createdAt).toLocaleDateString()}</p>
+                <button 
+                  className="history-btn"
+                  onClick={() => handleViewHistory(sample.latitude, sample.longitude)}
+                >
+                  View Location History
+                </button>
               </div>
             </Popup>
           </CircleMarker>
         ))}
       </MapContainer>
+      
+      {showHistory && selectedLocation && (
+        <LocationHistory
+          latitude={selectedLocation.latitude}
+          longitude={selectedLocation.longitude}
+          onClose={closeHistory}
+        />
+      )}
     </div>
   );
 };
