@@ -55,13 +55,34 @@ router.post("/upload-csv", upload.single("file"), async (req, res) => {
         }
       })
       .on("end", async () => {
-        // Insert into MongoDB
-        await SandSample.insertMany(results);
+        // Filter out duplicates by checking existing records
+        const uniqueResults = [];
+        
+        for (const sample of results) {
+          const existing = await SandSample.findOne({
+            latitude: sample.latitude,
+            longitude: sample.longitude,
+            d50: sample.d50
+          });
+          
+          if (!existing) {
+            uniqueResults.push(sample);
+          }
+        }
+        
+        // Insert only unique records into MongoDB
+        if (uniqueResults.length > 0) {
+          await SandSample.insertMany(uniqueResults);
+        }
 
         // Delete temp file
         fs.unlinkSync(req.file.path);
           
-        res.status(200).json({ message: "CSV uploaded successfully", count: results.length });
+        res.status(200).json({ 
+          message: "CSV uploaded successfully", 
+          count: uniqueResults.length,
+          duplicatesSkipped: results.length - uniqueResults.length
+        });
         
       });
   } catch (error) {

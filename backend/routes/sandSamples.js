@@ -69,15 +69,33 @@ router.post('/upload', upload.single('file'), async (req, res) => {
     })
     .on('end', async () => {
       try {
-        // Insert all valid records into MongoDB
-        await SandSample.insertMany(results);
+        // Filter out duplicates by checking existing records
+        const uniqueResults = [];
+        
+        for (const sample of results) {
+          const existing = await SandSample.findOne({
+            latitude: sample.latitude,
+            longitude: sample.longitude,
+            d50: sample.d50
+          });
+          
+          if (!existing) {
+            uniqueResults.push(sample);
+          }
+        }
+        
+        // Insert only unique records into MongoDB
+        if (uniqueResults.length > 0) {
+          await SandSample.insertMany(uniqueResults);
+        }
         
         // Clean up the uploaded file
         fs.unlinkSync(req.file.path);
         
         res.json({ 
           message: 'CSV file processed successfully', 
-          samplesProcessed: results.length 
+          samplesProcessed: uniqueResults.length,
+          duplicatesSkipped: results.length - uniqueResults.length
         });
       } catch (error) {
         res.status(500).json({ 
