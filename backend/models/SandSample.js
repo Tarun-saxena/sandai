@@ -75,7 +75,7 @@ const sandSampleSchema = new mongoose.Schema({
   sedimentType: {
     type: String,
     required: true,
-    enum: ['Silt/Clay', 'Fine Sand', 'Medium Sand', 'Very Coarse Sand', 'Gravel']
+    enum: ['Silt/Clay', 'Fine Sand', 'Medium Sand', 'Coarse Sand', 'Gravel']
   },
   createdAt: {
     type: Date,

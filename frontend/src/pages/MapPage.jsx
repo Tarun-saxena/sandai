@@ -18,7 +18,7 @@ const MapPage = () => {
     { label: "Silt/Clay", value: "Silt/Clay" },
     { label: "Fine Sand", value: "Fine Sand" },
     { label: "Medium Sand", value: "Medium Sand" },
-    { label: "Very Coarse Sand", value: "Very Coarse Sand" },
+    { label: "Coarse Sand", value: "Coarse Sand" },
     { label: "Gravel", value: "Gravel" },
   ];
 
